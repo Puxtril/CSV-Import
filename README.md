@@ -11,4 +11,4 @@ While created for Renderdoc .csv files, this is intended to be a general-purpose
 
 # Import Options Screenshot
 
-![Import Options](images/preview.png)
+![Import Options](images/Preview.png)
