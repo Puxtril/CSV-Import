@@ -14,3 +14,7 @@ To install, download ImportCSV.py and install as a blender addon. *Do not clone 
 # Import Options Screenshot
 
 ![Import Options](images/Preview.png)
+
+In each category, specify the index (0-based) in the .csv for each column of data.
+
+Not pictured: the extra options when the "Show Normalize" is checked. This will add an extra field to each category that will divide input values by a number; "normalizing" the data.

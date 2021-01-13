@@ -14,7 +14,7 @@ from bpy.props import (
 bl_info = {
     "name": "CSV Importer",
     "author": "Puxtril",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (2, 80, 0),
     "location": "File > Import-Export",
     "description": "Import CSV mesh dump",
@@ -54,6 +54,16 @@ class Import_CSV(bpy.types.Operator):
         description="Remove doubles and enable smooth shading",
         default=True,
     )
+    showNormalize: bpy.props.BoolProperty(
+        name="Show Normalize",
+        description="Show options to normalize input values",
+        default=False,
+    )
+    skipFirstRow: bpy.props.BoolProperty(
+        name="Skip Title",
+        description="Skip first row of the .csv file",
+        default=True,
+    )
     positionIndex: bpy.props.IntVectorProperty(
         name="Positions",
         description="Column numbers (0 indexed) of vertex positions",
@@ -69,6 +79,11 @@ class Import_CSV(bpy.types.Operator):
         min=0,
         soft_max=20,
         default=(6, 7, 8),
+    )
+    normalNormalize: bpy.props.IntProperty(
+        name="Normalize Normals",
+        description="Divide inputs by this number",
+        default=1
     )
 
 ########################################################################
@@ -89,6 +104,11 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=(14, 15),
     )
+    uvNormalize0: bpy.props.IntProperty(
+        name="Normalize UV 1",
+        description="Divide inputs by this number",
+        default=1
+    )
     uvIndex1: bpy.props.IntVectorProperty(
         name="UV 2",
         description="Column numbers (0 indexed) of UV map",
@@ -96,6 +116,11 @@ class Import_CSV(bpy.types.Operator):
         min=0,
         soft_max=20,
         default=(0, 0),
+    )
+    uvNormalize1: bpy.props.IntProperty(
+        name="Normalize UV 2",
+        description="Divide inputs by this number",
+        default=1
     )
     uvIndex2: bpy.props.IntVectorProperty(
         name="UV 3",
@@ -105,6 +130,11 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=(0, 0),
     )
+    uvNormalize2: bpy.props.IntProperty(
+        name="Normalize UV 3",
+        description="Divide inputs by this number",
+        default=1
+    )
     uvIndex3: bpy.props.IntVectorProperty(
         name="UV 4",
         description="Column numbers (0 indexed) of UV map",
@@ -113,6 +143,11 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=(0, 0),
     )
+    uvNormalize3: bpy.props.IntProperty(
+        name="Normalize UV 4",
+        description="Divide inputs by this number",
+        default=1
+    )
     uvIndex4: bpy.props.IntVectorProperty(
         name="UV 5",
         description="Column numbers (0 indexed) of UV map",
@@ -120,6 +155,11 @@ class Import_CSV(bpy.types.Operator):
         min=0,
         soft_max=20,
         default=(0, 0),
+    )
+    uvNormalize4: bpy.props.IntProperty(
+        name="Normalize UV 5",
+        description="Divide inputs by this number",
+        default=1
     )
 
 ########################################################################
@@ -140,6 +180,11 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=(10, 11, 12),
     )
+    color3Normalize0: bpy.props.IntProperty(
+        name="Normalize Color RGB 1",
+        description="Divide inputs by this number",
+        default=1
+    )
     color3Index1: bpy.props.IntVectorProperty(
         name="Vertex Color RGB 2",
         description="Column numbers (0 indexed) of Vertex Colors (RGB)",
@@ -147,6 +192,11 @@ class Import_CSV(bpy.types.Operator):
         min=0,
         soft_max=20,
         default=(0, 0, 0),
+    )
+    color3Normalize1: bpy.props.IntProperty(
+        name="Normalize Color RGB 2",
+        description="Divide inputs by this number",
+        default=1
     )
     color3Index2: bpy.props.IntVectorProperty(
         name="Vertex Color RGB 3",
@@ -156,6 +206,11 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=(0, 0, 0),
     )
+    color3Normalize2: bpy.props.IntProperty(
+        name="Normalize Colors RGB 3",
+        description="Divide inputs by this number",
+        default=1
+    )
     color3Index3: bpy.props.IntVectorProperty(
         name="Vertex Color RGB 4",
         description="Column numbers (0 indexed) of Vertex Colors (RGB)",
@@ -164,6 +219,11 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=(0, 0, 0),
     )
+    color3Normalize3: bpy.props.IntProperty(
+        name="Normalize Colors RGB 4",
+        description="Divide inputs by this number",
+        default=1
+    )
     color3Index4: bpy.props.IntVectorProperty(
         name="Vertex Color RGB 5",
         description="Column numbers (0 indexed) of Vertex Colors (RGB)",
@@ -171,6 +231,11 @@ class Import_CSV(bpy.types.Operator):
         min=0,
         soft_max=20,
         default=(0, 0, 0),
+    )
+    color3Normalize4: bpy.props.IntProperty(
+        name="Normalize Colors RGB 5",
+        description="Divide inputs by this number",
+        default=1
     )
 
 ########################################################################
@@ -190,12 +255,22 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=0,
     )
+    colorNormalize0: bpy.props.IntProperty(
+        name="Normalize Color Alpha 1",
+        description="Divide input by this number",
+        default=1
+    )
     colorIndex1: bpy.props.IntProperty(
         name="Vertex Color Alpha 2",
         description="Column number (0 indexed) of Vertex Color (Alpha)",
         min=0,
         soft_max=20,
         default=0,
+    )
+    colorNormalize1: bpy.props.IntProperty(
+        name="Normalize Color Alpha 2",
+        description="Divide input by this number",
+        default=1
     )
     colorIndex2: bpy.props.IntProperty(
         name="Vertex Color Alpha 3",
@@ -204,6 +279,11 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=0,
     )
+    colorNormalize2: bpy.props.IntProperty(
+        name="Normalize Color Alpha 3",
+        description="Divide input by this number",
+        default=1
+    )
     colorIndex3: bpy.props.IntProperty(
         name="Vertex Color Alpha 4",
         description="Column number (0 indexed) of Vertex Color (Alpha)",
@@ -211,12 +291,22 @@ class Import_CSV(bpy.types.Operator):
         soft_max=20,
         default=0,
     )
+    colorNormalize3: bpy.props.IntProperty(
+        name="Normalize Color Alpha 4",
+        description="Divide input by this number",
+        default=1
+    )
     colorIndex4: bpy.props.IntProperty(
         name="Vertex Color Alpha 5",
         description="Column number (0 indexed) of Vertex Color (Alpha)",
         min=0,
         soft_max=20,
         default=0,
+    )
+    colorNormalize4: bpy.props.IntProperty(
+        name="Normalize Color Alpha 5",
+        description="Divide input by this number",
+        default=1
     )
 
 ########################################################################
@@ -228,9 +318,10 @@ class Import_CSV(bpy.types.Operator):
             from_up=self.axis_up,
         ).to_4x4()
 
-        uvArgs = [self.uvIndex0, self.uvIndex1, self.uvIndex2, self.uvIndex3, self.uvIndex4,]
+        # Only parse what it shown in the importer UI
+        uvArgs = [self.uvIndex0, self.uvIndex1, self.uvIndex2, self.uvIndex3, self.uvIndex4]
         color3Args = [self.color3Index0, self.color3Index1, self.color3Index2, self.color3Index3, self.color3Index4]
-        colorArgs = [self.colorIndex0, self.colorIndex1, self.colorIndex2, self.colorIndex3, self.colorIndex4,]
+        colorArgs = [self.colorIndex0, self.colorIndex1, self.colorIndex2, self.colorIndex3, self.colorIndex4]
 
         verts, faces, normals, uvs, color3s, colors = importCSV(
             self.filepath,
@@ -242,9 +333,34 @@ class Import_CSV(bpy.types.Operator):
             self.mirrorVertX,
             self.mirrorUV,
             self.vertexOrder,
+            self.skipFirstRow,
         )
 
-        meshObj = createMesh(verts, faces, normals, uvs, color3s, colors, transformMatrix)
+        # Don't do anything if not shown
+        if self.showNormalize:
+            normalNormalizeArg = self.normalNormalize
+            uvsNormalizeArgs = [self.uvNormalize0, self.uvNormalize1, self.uvNormalize2, self.uvNormalize3, self.uvNormalize4]
+            color3sNormalizeArgs = [self.color3Normalize0, self.color3Normalize1, self.color3Normalize2, self.color3Normalize3, self.color3Normalize4]
+            colorsNormalizeArgs = [self.colorNormalize0, self.colorNormalize1, self.colorNormalize2, self.colorNormalize3, self.colorNormalize4]
+        else:
+            normalNormalizeArg = 1
+            uvsNormalizeArgs = [1, 1, 1, 1, 1]
+            color3sNormalizeArgs = [1, 1, 1, 1, 1]
+            colorsNormalizeArgs = [1, 1, 1, 1, 1]
+
+        meshObj = createMesh(
+            verts,
+            faces,
+            normals,
+            normalNormalizeArg,
+            uvs,
+            uvsNormalizeArgs[: self.uvCount],
+            color3s,
+            color3sNormalizeArgs[: self.color3Count],
+            colors,
+            colorsNormalizeArgs[: self.colorCount],
+            transformMatrix
+        )
 
         if self.cleanMesh:
             tempBmesh = bmesh.new()
@@ -272,26 +388,39 @@ class Import_CSV(bpy.types.Operator):
         row2 = generalBox.row()
         row2.prop(self, "cleanMesh")
         row2.prop(self, "vertexOrder")
+        row3 = generalBox.row()
+        row3.prop(self, "showNormalize")
+        row3.prop(self, "skipFirstRow")
 
         indexBox = self.layout.box()
         indexBoxRow = indexBox.row()
         indexBoxRow.column().prop(self, "positionIndex")
-        indexBoxRow.column().prop(self, "normalIndex")
+
+        normalColumn = indexBoxRow.column()
+        normalColumn.prop(self, "normalIndex")
+        if self.showNormalize:
+            normalColumn.prop(self, "normalNormalize")
 
         uvBox = self.layout.box()
         uvBox.prop(self, "uvCount")
         for i in range(self.uvCount):
             uvBox.prop(self, f"uvIndex{i}")
+            if self.showNormalize:
+                uvBox.prop(self, f"uvNormalize{i}")
 
         color3Box = self.layout.box()
         color3Box.prop(self, "color3Count")
         for i in range(self.color3Count):
             color3Box.prop(self, f"color3Index{i}")
+            if self.showNormalize:
+                color3Box.prop(self, f"color3Normalize{i}")
 
         colorBox = self.layout.box()
         colorBox.prop(self, "colorCount")
         for i in range(self.colorCount):
             colorBox.prop(self, f"colorIndex{i}")
+            if self.showNormalize:
+                colorBox.prop(self, f"colorNormalize{i}")
 
 
 def importCSV(
@@ -304,6 +433,7 @@ def importCSV(
     mirrorVertX: bool,
     mirrorUV: bool,
     flipVertOrder: bool,
+    skipFirstRow: bool,
 ):
     # list<tuple3<float>>
     vertices = []
@@ -328,7 +458,9 @@ def importCSV(
 
     with open(filepath) as f:
         reader = csv.reader(f)
-        next(reader)
+
+        if skipFirstRow:
+            next(reader)
 
         curFace = []
         for rowIndex, row in enumerate(reader):
@@ -386,33 +518,51 @@ def importCSV(
         return vertices, faces, normals, uvs, color3s, colors
 
 
-def createMesh(vertices, faces, normals, uvs, color3s, colors, transformMatrix):
+def createMesh(
+    vertices: list,
+    faces: list,
+    normals: list,
+    normalNormalize: int,
+    uvs: list,
+    uvsNormalize: list,
+    color3s: list,
+    color3sNormalize: list,
+    colors: list,
+    colorsNormalize: list,
+    transformMatrix
+):
     mesh = bpy.data.meshes.new("name")
     mesh.from_pydata(vertices, [], faces)
 
     # Normals
     for vertexIndex in range(len(mesh.vertices)):
-        mesh.vertices[vertexIndex].normal = normals[vertexIndex]
+        curNormal = normals[vertexIndex]
+        curNormalNorm = list(map(lambda x: x / normalNormalize, curNormal)) # Bad variable name, I know...
+        mesh.vertices[vertexIndex].normal = curNormalNorm
 
     # UV Maps
     for uvIndex in range(len(uvs)):
         uvLayer = mesh.uv_layers.new(name=f"UV{uvIndex}")
         for vertexIndex in range(len(uvLayer.data)):
-            uvLayer.data[vertexIndex].uv = uvs[uvIndex][vertexIndex]
+            curUVs = uvs[uvIndex][vertexIndex]
+            curUVsNorm = list(map(lambda x: x / uvsNormalize[uvIndex], curUVs))
+            uvLayer.data[vertexIndex].uv = curUVsNorm
 
     # Vertex Colors3
     for color3Index in range(len(color3s)):
         color3Layer = mesh.vertex_colors.new(name=f"rgb{color3Index}")
         for vertexIndex in range(len(color3Layer.data)):
             curCol3 = color3s[color3Index][vertexIndex]
-            color3Layer.data[vertexIndex].color = [curCol3[0], curCol3[1], curCol3[2], 0]
+            curCol3Norm = list(map(lambda x: x / color3sNormalize[color3Index], curCol3))
+            color3Layer.data[vertexIndex].color = [curCol3Norm[0], curCol3Norm[1], curCol3Norm[2], 0]
 
     # Vertex Colors
     for colorIndex in range(len(colors)):
         colorLayer = mesh.vertex_colors.new(name=f"alpha{colorIndex}")
         for vertexIndex in range(len(colorLayer.data)):
             curCol = colors[colorIndex][vertexIndex]
-            colorLayer.data[vertexIndex].color = [curCol, curCol, curCol, 0]
+            curColNorm = curCol / colorsNormalize[colorIndex]
+            colorLayer.data[vertexIndex].color = [curColNorm, curColNorm, curColNorm, 0]
 
     obj = bpy.data.objects.new("name", mesh)
     obj.data.transform(transformMatrix)
