@@ -534,12 +534,6 @@ def createMesh(
     mesh = bpy.data.meshes.new("name")
     mesh.from_pydata(vertices, [], faces)
 
-    # Normals
-    for vertexIndex in range(len(mesh.vertices)):
-        curNormal = normals[vertexIndex]
-        curNormalNorm = list(map(lambda x: x / normalNormalize, curNormal)) # Bad variable name, I know...
-        mesh.vertices[vertexIndex].normal = curNormalNorm
-
     # UV Maps
     for uvIndex in range(len(uvs)):
         uvLayer = mesh.uv_layers.new(name=f"UV{uvIndex}")
