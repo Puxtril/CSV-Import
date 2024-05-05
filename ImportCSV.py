@@ -14,7 +14,7 @@ from bpy.props import (
 bl_info = {
     "name": "CSV Importer",
     "author": "Puxtril",
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "blender": (2, 80, 0),
     "location": "File > Import-Export",
     "description": "Import CSV mesh dump",
@@ -71,19 +71,6 @@ class Import_CSV(bpy.types.Operator):
         min=0,
         soft_max=20,
         default=(2, 3, 4),
-    )
-    normalIndex: bpy.props.IntVectorProperty(
-        name="Normals",
-        description="Column numbers (0 indexed) of vertex normals",
-        size=3,
-        min=0,
-        soft_max=20,
-        default=(6, 7, 8),
-    )
-    normalNormalize: bpy.props.IntProperty(
-        name="Normalize Normals",
-        description="Divide inputs by this number",
-        default=1
     )
 
 ########################################################################
@@ -323,10 +310,9 @@ class Import_CSV(bpy.types.Operator):
         color3Args = [self.color3Index0, self.color3Index1, self.color3Index2, self.color3Index3, self.color3Index4]
         colorArgs = [self.colorIndex0, self.colorIndex1, self.colorIndex2, self.colorIndex3, self.colorIndex4]
 
-        verts, faces, normals, uvs, color3s, colors = importCSV(
+        verts, faces, uvs, color3s, colors = importCSV(
             self.filepath,
             self.positionIndex,
-            self.normalIndex,
             uvArgs[: self.uvCount],
             color3Args[: self.color3Count],
             colorArgs[: self.colorCount],
@@ -338,12 +324,10 @@ class Import_CSV(bpy.types.Operator):
 
         # Don't do anything if not shown
         if self.showNormalize:
-            normalNormalizeArg = self.normalNormalize
             uvsNormalizeArgs = [self.uvNormalize0, self.uvNormalize1, self.uvNormalize2, self.uvNormalize3, self.uvNormalize4]
             color3sNormalizeArgs = [self.color3Normalize0, self.color3Normalize1, self.color3Normalize2, self.color3Normalize3, self.color3Normalize4]
             colorsNormalizeArgs = [self.colorNormalize0, self.colorNormalize1, self.colorNormalize2, self.colorNormalize3, self.colorNormalize4]
         else:
-            normalNormalizeArg = 1
             uvsNormalizeArgs = [1, 1, 1, 1, 1]
             color3sNormalizeArgs = [1, 1, 1, 1, 1]
             colorsNormalizeArgs = [1, 1, 1, 1, 1]
@@ -351,8 +335,6 @@ class Import_CSV(bpy.types.Operator):
         meshObj = createMesh(
             verts,
             faces,
-            normals,
-            normalNormalizeArg,
             uvs,
             uvsNormalizeArgs[: self.uvCount],
             color3s,
@@ -396,11 +378,6 @@ class Import_CSV(bpy.types.Operator):
         indexBoxRow = indexBox.row()
         indexBoxRow.column().prop(self, "positionIndex")
 
-        normalColumn = indexBoxRow.column()
-        normalColumn.prop(self, "normalIndex")
-        if self.showNormalize:
-            normalColumn.prop(self, "normalNormalize")
-
         uvBox = self.layout.box()
         uvBox.prop(self, "uvCount")
         for i in range(self.uvCount):
@@ -426,7 +403,6 @@ class Import_CSV(bpy.types.Operator):
 def importCSV(
     filepath: str,
     posIndicies: tuple,
-    normIndicies: tuple,
     uvMapsIndicies: list,
     color3sIndicies: list,
     colorsIndicies: list,
@@ -437,8 +413,6 @@ def importCSV(
 ):
     # list<tuple3<float>>
     vertices = []
-    # list<tuple3<float>>
-    normals = []
     # list<tuple3<int>>
     faces = []
     # list<list<tuple2<int>>>
@@ -474,14 +448,6 @@ def importCSV(
             )
             vertices.append(curPos)
 
-            # Normals
-            curNormal = (
-                float(row[normIndicies[0]]),
-                float(row[normIndicies[1]]),
-                float(row[normIndicies[2]]),
-            )
-            normals.append(curNormal)
-
             # UV Maps
             for i in range(len(uvMapsIndicies)):
                 curUV = (
@@ -515,14 +481,12 @@ def importCSV(
                     faces.append(curFace)
                 curFace = []
 
-        return vertices, faces, normals, uvs, color3s, colors
+        return vertices, faces, uvs, color3s, colors
 
 
 def createMesh(
     vertices: list,
     faces: list,
-    normals: list,
-    normalNormalize: int,
     uvs: list,
     uvsNormalize: list,
     color3s: list,
@@ -533,12 +497,6 @@ def createMesh(
 ):
     mesh = bpy.data.meshes.new("name")
     mesh.from_pydata(vertices, [], faces)
-
-    # Normals
-    for vertexIndex in range(len(mesh.vertices)):
-        curNormal = normals[vertexIndex]
-        curNormalNorm = list(map(lambda x: x / normalNormalize, curNormal)) # Bad variable name, I know...
-        mesh.vertices[vertexIndex].normal = curNormalNorm
 
     # UV Maps
     for uvIndex in range(len(uvs)):
