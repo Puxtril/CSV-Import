@@ -14,7 +14,7 @@ from bpy.props import (
 bl_info = {
     "name": "CSV Importer",
     "author": "Puxtril",
-    "version": (1, 2, 0),
+    "version": (1, 3, 0),
     "blender": (2, 80, 0),
     "location": "File > Import-Export",
     "description": "Import CSV mesh dump",
@@ -442,17 +442,17 @@ def importCSV(
 
             # Position
             curPos = (
-                float(row[posIndicies[0]]) * x_mod,
-                float(row[posIndicies[1]]),
-                float(row[posIndicies[2]]),
+                readFloatFromArray(row, posIndicies[0]) * x_mod,
+                readFloatFromArray(row, posIndicies[1]),
+                readFloatFromArray(row, posIndicies[2])
             )
             vertices.append(curPos)
 
             # UV Maps
             for i in range(len(uvMapsIndicies)):
                 curUV = (
-                    float(row[uvMapsIndicies[i][0]]),
-                    float(row[uvMapsIndicies[i][1]]),
+                    readFloatFromArray(row, uvMapsIndicies[i][0]),
+                    readFloatFromArray(row, uvMapsIndicies[i][1])
                 )
                 if mirrorUV:
                     curUV = (curUV[0], 1 - curUV[1])
@@ -461,15 +461,15 @@ def importCSV(
             # Vertex Colors3
             for i in range(len(color3sIndicies)):
                 curColor3 = (
-                    float(row[color3sIndicies[i][0]]),
-                    float(row[color3sIndicies[i][1]]),
-                    float(row[color3sIndicies[i][2]]),
+                    readFloatFromArray(row, color3sIndicies[i][0]),
+                    readFloatFromArray(row, color3sIndicies[i][1]),
+                    readFloatFromArray(row, color3sIndicies[i][2])
                 )
                 color3s[i].append(curColor3)
 
             # Vertex Colors
             for i in range(len(colorsIndicies)):
-                curColor = float(row[colorsIndicies[i]])
+                curColor = readFloatFromArray(row, colorsIndicies[i])
                 colors[i].append(curColor)
 
             # Append Faces
@@ -527,6 +527,15 @@ def createMesh(
     obj.matrix_world = mathutils.Matrix()
     bpy.context.scene.collection.objects.link(obj)
     return obj
+
+
+# IndexError and ValueError can be thrown here
+# But wrap it in a generic `Exception` because... why not
+def readFloatFromArray(arr, index, default = 0.0):
+    try:
+        return float(arr[index])
+    except Exception:
+        return default 
 
 
 def menuItem(self, context):
